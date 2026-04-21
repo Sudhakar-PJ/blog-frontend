@@ -64,7 +64,7 @@ api.interceptors.response.use((response) => {
   }
 
   const originalRequest = error.config;
-  const authPathRegex = /auth\/(login|register|logout|refresh|forgot-password|verify-email)/;
+  const authPathRegex = /auth\/(login|register|logout|refresh|forgot-password|verify-email|google\/exchange)/;
   const isAuthPath = authPathRegex.test(originalRequest.url);
 
   if (error.response && error.response.status === 401 && !originalRequest._retry && !isAuthPath) {
@@ -89,7 +89,7 @@ api.interceptors.response.use((response) => {
       return api(originalRequest);
     } catch (err) {
       processQueue(err, null);
-      if (!['/login', '/register'].includes(window.location.pathname)) {
+      if (!['/login', '/register', '/auth/success'].includes(window.location.pathname)) {
         console.warn('Session expired completely. Please log in again.');
         window.location.href = '/login';
       }
