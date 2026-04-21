@@ -18,6 +18,9 @@ const AdminPanel = () => {
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [hotLogs, setHotLogs] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [suspensionFilter, setSuspensionFilter] = useState('all');
 
   // RBAC hook evaluation moved below to adhere to React Hook constraints
 
@@ -28,7 +31,10 @@ const AdminPanel = () => {
       if (tab === 'users') {
         const p = pageOverride || usersPage;
         const q = searchOverride !== undefined ? searchOverride : searchQuery;
-        const res = await api.get(`/admin/users?page=${p}&limit=20&q=${encodeURIComponent(q)}`);
+        const rf = roleFilter !== 'all' ? roleFilter : '';
+        const sf = suspensionFilter !== 'all' ? suspensionFilter : '';
+
+        const res = await api.get(`/admin/users?page=${p}&limit=20&q=${encodeURIComponent(q)}&role=${rf}&isSuspended=${sf}`);
         setData(prev => ({ ...prev, users: res.data.users }));
         setUsersTotalPages(res.data.totalPages || 1);
         if (pageOverride) setUsersPage(pageOverride);
@@ -69,7 +75,7 @@ const AdminPanel = () => {
       return () => clearTimeout(delay);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+  }, [searchQuery, roleFilter, suspensionFilter]);
 
   const handleRoleChange = async (targetId, action) => {
     try {
@@ -175,17 +181,40 @@ const AdminPanel = () => {
               <h3 className="font-bold text-gray-900">User Directory</h3>
               <p className="text-xs text-gray-500 mt-1 mb-3">Manage roles & accounts</p>
               {activeTab === 'users' && (
-                <div className="relative mt-2" onClick={(e) => e.stopPropagation()}>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-indigo-400" />
+                <div className="mt-4 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    <input
+                      type="text"
+                      className="block w-full pl-9 pr-3 py-2 border border-indigo-200 rounded-lg leading-5 bg-white placeholder-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs transition duration-150 ease-in-out text-left"
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                  <input
-                    type="text"
-                    className="block w-full pl-9 pr-3 py-2 border border-indigo-200 rounded-lg leading-5 bg-white placeholder-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs transition duration-150 ease-in-out text-left"
-                    placeholder="Search users..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <select 
+                      value={roleFilter} 
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      className="block w-full px-2 py-1.5 border border-indigo-200 rounded-lg text-[10px] font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                    >
+                      <option value="all">All Roles</option>
+                      <option value="user">Users</option>
+                      <option value="admin">Admins</option>
+                      <option value="superadmin">Superadmins</option>
+                    </select>
+                    <select 
+                      value={suspensionFilter} 
+                      onChange={(e) => setSuspensionFilter(e.target.value)}
+                      className="block w-full px-2 py-1.5 border border-indigo-200 rounded-lg text-[10px] font-bold text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="false">Active Only</option>
+                      <option value="true">Suspended Only</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </div>
@@ -292,7 +321,12 @@ const AdminPanel = () => {
                              {u.username?.charAt(0).toUpperCase() || '?'}
                            </div>
                            <div>
-                             <div className="font-bold text-gray-900">{u.username} {u.id === user.id && "(You)"}</div>
+                             <div className="font-bold text-gray-900">
+                                <Link to={`/profile/${u.id}`} className="hover:text-indigo-600 transition-colors underline-offset-4 hover:underline decoration-indigo-300">
+                                  {u.username}
+                                </Link>
+                                {u.id === user.id && <span className="ml-2 text-indigo-500 text-[10px] font-black uppercase">You</span>}
+                              </div>
                              <div className="text-xs text-gray-500">{u.full_name || 'Anonymous User'}</div>
                            </div>
                          </div>
@@ -329,14 +363,13 @@ const AdminPanel = () => {
                               </button>
                             )}
 
-                            {u.id !== user.id && (
-                              <button onClick={() => handleDeleteUser(u.id)} className="text-red-500 hover:text-red-700 text-xs font-bold uppercase ml-3">
-                                Delete Account
-                              </button>
-                            )}
-                            {u.id === user.id && (
+                             {(u.id === user.id || (user.role === 'admin' && u.role !== 'user')) ? (
                                <span className="text-gray-300 text-[10px] uppercase font-bold">Protected</span>
-                            )}
+                             ) : (
+                               <button onClick={() => handleDeleteUser(u.id)} className="text-red-500 hover:text-red-700 text-xs font-bold uppercase ml-3">
+                                 Delete Account
+                               </button>
+                             )}
                          </div>
                        </td>
                      </tr>
