@@ -17,11 +17,13 @@ const AuthSuccess = () => {
       }
 
       try {
+        console.log('Exchanging Google code:', code);
         const response = await api.post('/auth/google/exchange', { code });
+        console.log('Exchange successful! User:', response.data.user);
         setUser(response.data.user);
         navigate('/feed');
       } catch (err) {
-        console.error('Google Auth Exchange failed:', err);
+        console.error('Google Auth Exchange failed:', err.response?.data || err.message);
         navigate('/login?error=social_auth_failed');
       }
     };
