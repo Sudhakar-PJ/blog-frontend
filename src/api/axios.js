@@ -10,6 +10,8 @@ const api = axios.create({
   }
 });
 
+let memoryCsrfToken = null;
+
 // Request interceptor to attach CSRF tokens (Authorization now handled by cookies)
 api.interceptors.request.use((config) => {
   const getCookie = (name) => {
@@ -19,7 +21,7 @@ api.interceptors.request.use((config) => {
     return null;
   };
   
-  const csrfToken = getCookie('csrf-token');
+  const csrfToken = memoryCsrfToken || getCookie('csrf-token');
   if (csrfToken) {
     config.headers['X-CSRF-Token'] = csrfToken;
   }
@@ -44,6 +46,12 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.response.use((response) => {
+  // Capture CSRF token from header if present
+  const tokenFromHeader = response.headers['x-csrf-token'];
+  if (tokenFromHeader) {
+    memoryCsrfToken = tokenFromHeader;
+  }
+
   // Return only the data portion of our standardized API response
   if (response.data && response.data.success) {
     return { ...response, data: response.data.data };
