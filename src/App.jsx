@@ -11,6 +11,7 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
 const VerifyEmail = React.lazy(() => import('./pages/VerifyEmail'));
 const VerifyPhone = React.lazy(() => import('./pages/VerifyPhone'));
+const AuthSuccess = React.lazy(() => import('./pages/AuthSuccess'));
 
 const PageFallback = () => (
   <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
@@ -71,6 +72,11 @@ const App = () => {
             <UnverifiedRequiredRoute>
               <VerifyEmail />
             </UnverifiedRequiredRoute>
+          } />
+          <Route path="/auth/success" element={
+            <PublicRoute>
+              <AuthSuccess />
+            </PublicRoute>
           } />
           <Route path="/feed" element={
             <ProtectedRoute>
