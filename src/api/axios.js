@@ -58,6 +58,11 @@ api.interceptors.response.use((response) => {
   }
   return response;
 }, async (error) => {
+  // ALSO capture CSRF token from error responses (like 401)
+  if (error.response && error.response.headers && error.response.headers['x-csrf-token']) {
+    memoryCsrfToken = error.response.headers['x-csrf-token'];
+  }
+
   const originalRequest = error.config;
   const authPathRegex = /auth\/(login|register|logout|refresh|forgot-password|verify-email)/;
   const isAuthPath = authPathRegex.test(originalRequest.url);
