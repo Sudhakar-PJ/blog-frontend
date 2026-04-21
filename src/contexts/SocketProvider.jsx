@@ -12,7 +12,8 @@ export const SocketProvider = ({ children }) => {
     // Only establish a socket connection if the user is authenticated, 
     // fully loaded, and email is verified.
     if (user && !loading && user.is_email_verified) {
-      newSocket = io('http://localhost:5000', {
+      const socketUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+      newSocket = io(socketUrl, {
         withCredentials: true,
         transports: ['polling', 'websocket']
       });
