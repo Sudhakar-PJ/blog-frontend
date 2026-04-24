@@ -458,7 +458,7 @@ const Feed = () => {
             </div>
           </div>
           
-          <div className="flex-1 max-w-md mx-8 hidden lg:block">
+          <div className="flex-1 max-w-md mx-4 hidden md:block">
              <div className="flex gap-2 mb-2 p-1 bg-gray-100/50 rounded-xl w-fit">
                 <button 
                   onClick={() => setSearchMode('posts')}
@@ -612,6 +612,77 @@ const Feed = () => {
              
              <button onClick={logout} className="text-red-500 font-bold bg-red-50 px-4 py-2 rounded-xl border border-red-100 hover:bg-red-100 transition-colors">Logout</button>
           </div>
+        </div>
+
+        {/* Mobile Search Section */}
+        <div className="md:hidden mb-8 space-y-4">
+          <div className="flex gap-2 p-1 bg-gray-200/50 rounded-xl w-fit">
+            <button 
+              onClick={() => setSearchMode('posts')}
+              className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${searchMode === 'posts' ? 'bg-white shadow-md text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Posts
+            </button>
+            <button 
+              onClick={() => setSearchMode('bloggers')}
+              className={`px-4 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${searchMode === 'bloggers' ? 'bg-white shadow-md text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Bloggers
+            </button>
+          </div>
+          <form onSubmit={handleSearch} className="relative group">
+            <input 
+              type="text" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={searchMode === 'posts' ? "Search posts..." : "Find bloggers..."}
+              className="w-full bg-white border border-gray-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            {searchTerm && (
+              <button 
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-indigo-600 uppercase"
+              >
+                Clear
+              </button>
+            )}
+
+            {/* Mobile Dropdown Results */}
+            {searchMode === 'bloggers' && searchTerm.trim() && (
+              <div className="absolute top-16 left-0 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                <div className="p-3 border-b border-gray-50 bg-gray-50/50">
+                  <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Results</h4>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {bloggerResults.length === 0 && !isBloggerLoading ? (
+                    <div className="p-6 text-center text-xs text-gray-400 font-bold">No bloggers found.</div>
+                  ) : (
+                    bloggerResults.map(blogger => (
+                      <div 
+                        key={blogger.id}
+                        onClick={() => navigate(`/profile/${blogger.id}`)}
+                        className="p-3 flex items-center gap-3 hover:bg-indigo-50/30 cursor-pointer border-b border-gray-50 last:border-0"
+                      >
+                        <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 bg-indigo-50 flex items-center justify-center shrink-0">
+                          {blogger.profile_pic_url ? (
+                            <img src={blogger.profile_pic_url} alt={blogger.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-indigo-600 font-black text-sm">{blogger.username.charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-gray-900 text-sm truncate">{blogger.username}</div>
+                          <div className="text-[10px] text-gray-500 truncate">{blogger.full_name}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </form>
         </div>
 
         {/* Mobile-only Admin Button */}
